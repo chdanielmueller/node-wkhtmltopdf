@@ -5,7 +5,6 @@ var Path = require('path'),
   Mkdirp = require('mkdirp'),
   Wkhtmltopdf = require('..');
 
-Wkhtmltopdf.shell = process.env.WKHTMLTOPDF_SHELL || Wkhtmltopdf.shell
 
 describe('wkhtmltopdf', function() {
 

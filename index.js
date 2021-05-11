@@ -20,9 +20,7 @@ function wkhtmltopdf(input, options, callback) {
   }
 
   var output = options.output;
-  var spawnOptions = options.spawnOptions;
   delete options.output;
-  delete options.spawnOptions;
 
   // make sure the special keys are last
   var extraKeys = [];
@@ -92,7 +90,7 @@ function wkhtmltopdf(input, options, callback) {
   if (isArray) {
     input.forEach(function(element) {
       var isUrl = /^(https?|file):\/\//.test(element);
-      if (element && isUrl) {
+      if (isUrl) {
         args.push(quote(element));
       } else {
         console.log('[node-wkhtmltopdf] [warn] Multi PDF only supported for URL files (http[s]:// or file://)')
@@ -100,9 +98,7 @@ function wkhtmltopdf(input, options, callback) {
     })
   } else {
     var isUrl = /^(https?|file):\/\//.test(input);
-    if (input) {
-      args.push(isUrl ? quote(input) : '-');    // stdin if HTML given directly
-    }
+    args.push(isUrl ? quote(input) : '-');    // stdin if HTML given directly
   }
 
   // Output
@@ -114,14 +110,14 @@ function wkhtmltopdf(input, options, callback) {
   }
 
   if (process.platform === 'win32') {
-    var child = spawn(args[0], args.slice(1), spawnOptions);
+    var child = spawn(args[0], args.slice(1));
   } else if (process.platform === 'darwin') {
-    var child = spawn('/bin/sh', ['-c', 'set -o pipefail ; ' + args.join(' ') + ' | cat'], spawnOptions);
+    var child = spawn('/bin/sh', ['-c', args.join(' ') + ' | cat ; exit ${PIPESTATUS[0]}']);
   } else {
     // this nasty business prevents piping problems on linux
     // The return code should be that of wkhtmltopdf and not of cat
     // http://stackoverflow.com/a/18295541/1705056
-    var child = spawn(wkhtmltopdf.shell, ['-c', 'set -o pipefail ; ' + args.join(' ') + ' | cat'], spawnOptions);
+    var child = spawn(wkhtmltopdf.shell, ['-c', args.join(' ') + ' | cat ; exit ${PIPESTATUS[0]}']);
   }
 
   var stream = child.stdout;
